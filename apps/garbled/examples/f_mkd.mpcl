@@ -1,0 +1,55 @@
+// -*- go -*-
+
+package main
+
+import (
+	"crypto/hmac"
+	"math"
+)
+
+const s_size = 32
+const r_size = 32
+
+type Input struct {
+	s1 [s_size]byte
+	s2 [s_size]byte
+	s3 [s_size]byte
+	r1 [r_size]byte
+	r2 [r_size]byte
+	r3 [r_size]byte
+}
+
+
+func main(hashKey [32]byte, input Input) []byte {
+	q := math.NewUint256([32]byte{
+        255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 254,
+    	186, 174, 220, 230, 175, 72, 160, 59, 191, 210, 94, 140, 208, 54, 65, 65
+    })
+
+    var data [3*s_size]byte
+	for i := 0; i < s_size; i++ {
+		data[i] = input.s1[i]
+	}
+	for i := 0; i < s_size; i++ {
+		data[i+s_size] = input.s2[i]
+	}
+	for i := 0; i < s_size; i++ {
+		data[i+2*s_size] = input.s3[i]
+	}
+
+    hash := hmac.SumSHA512(data, hashKey)
+
+	IL := math.NewUint256(hash[0:32])
+	IR := math.NewUint256(hash[32:64])
+
+	r1_256 := math.NewUint256(input.r1)
+	r2_256 := math.NewUint256(input.r2)
+	r3_256 := math.NewUint256(input.r3)
+
+	temp := math.Uint256{}
+	temp.AddMod(r2_256, r3_256, q)
+
+
+
+    return hash
+}
